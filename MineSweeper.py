@@ -1,6 +1,6 @@
 #Timothy Pearman - 28856139
-#entry for 2024 camjam competition
-#PEP8 Compliant :D
+#entry for 2024, univeristy of lincoln, camjam competition
+#PEP8 Compliant :D, i think...
 import pygame
 import random
 
@@ -17,7 +17,7 @@ pygame.display.set_icon(icon)
 # Font
 my_font = pygame.font.SysFont('Comic Sans MS', 30)
 
-rigged_chance = 0.1
+rigged_chance = 0.2
 check_rigged = False
 def check_rigged_game(rigged_chance):
     global check_rigged
@@ -47,14 +47,12 @@ def get_how_rigged(number_of_rows, number_of_columns):
         #case 5:
         #    return "random tile becomes invisible bomb"
         case _:
-            return 
-            print("error")
-
+            return "error"
 
 # Tile class
 class Tile:
     def __init__(self, state):
-        self.state = state  # 0 for empty, 1 for mine
+        self.state = state  # 0 for empty, 1 for mine, 2 for flag, 3 for flag on mine
         self.revealed = False  # Track if the tile has been revealed
 
     def __repr__(self):
@@ -334,8 +332,6 @@ def game_screen():
     while(grid_created == False):
         create_tile_grid(number_of_rows, number_of_columns, tile_image)
 
-  
-
     # Draw the tile buttons
     for row in range(number_of_rows):
         for col in range(number_of_columns):
@@ -348,7 +344,6 @@ def game_screen():
             elif action == "right_clicked":
                 print(f"Right-clicked on tile ({row}, {col})")
                 print(update_tile(row, col, action))
-
 
 # Main loop
 run = True
