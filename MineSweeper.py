@@ -1,7 +1,7 @@
 #Timothy Pearman - 28856139
 #entry for 2024 camjam competition
 #PEP8 Compliant :D
-
+ 
 import pygame
 import random
 import time
@@ -9,16 +9,13 @@ import time
 # initializing the constructor 
 pygame.init() 
 
-program_start_ticks = pygame.time.get_ticks()
-  
-
 """
  defines the window resolution 
  creates a display object with defined resolution
  sets the caption and icon attributes
 """
 window_width, window_height = 500, 600
-window = pygame.display.set_mode((window_width,window_height)) 
+window = pygame.display.set_mode((window_width, window_height)) 
 icon = pygame.image.load("assets/bomb.png")
 pygame.display.set_caption("\"NOT RIGGED\" Mine Sweeper")
 pygame.display.set_icon(icon)
@@ -37,117 +34,113 @@ defines a 2D array of dimensions 15x15 and initializes each element to a Tile ob
 iterates through the 2D array and randomly assigns 75 mines by updating the state of the tile object to 1
 """
 number_of_rows, number_of_columns = 15, 15
-number_of_mines,number_of_flags = 75, 75
+number_of_mines, number_of_flags = 75, 75
 mine_field = [[Tile(0) for _ in range(number_of_columns)] for _ in range(number_of_rows)]
 for _ in range(number_of_mines):
-    Row = random.randrange(0,number_of_rows)
-    Column = random.randrange(0,number_of_columns)
-    
+    Row = random.randrange(0, number_of_rows)
+    Column = random.randrange(0, number_of_columns)
     mine_field[Row][Column].state = 1
 print(mine_field)
 
-
-button = pygame.image.load("assets/flag.png").convert_alpha()
+# Load the button images
+button_image = pygame.image.load("assets/button.png").convert_alpha()
+secret_button_image = pygame.image.load("assets/secret.png").convert_alpha()
+tile_button_image = pygame.image.load("assets/flag.png").convert_alpha()
 
 class Button():
-    def __init__(self, x, y, image, scale = 1):
+    def __init__(self, x, y, image, scale=1):
         width = image.get_width()
         height = image.get_height()
         self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale)))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
         self.left_clicked = False
-        self.right_clicked = False
 
     def draw(self):
-        #get mouse position
+        # get mouse position
         pos = pygame.mouse.get_pos()
 
-        #check mouseover and clicked conditions
+        # check mouseover and clicked conditions
         if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] == 1 and self.left_clicked == False: 
+            if pygame.mouse.get_pressed()[0] == 1 and not self.left_clicked: 
                 self.left_clicked = True
-                return "left_clicked"
-            if pygame.mouse.get_pressed()[2] == 1 and self.right_clicked == False: 
-                self.right_clicked = True
-                return "right_clicked"
-            
-        if pygame.mouse.get_pressed()[0] == 0:
+                return True
+        else:
             self.left_clicked = False
-        if pygame.mouse.get_pressed()[2] == 0:
-            self.right_clicked = False
-        
-        #draw button onto window
+
+        # draw button onto window
         window.blit(self.image, (self.rect.x, self.rect.y))
+        return False
 
-#create button instance
-start_button = Button(50, 50, button, 10)
-exit_button = Button(50, 100, button)
-secret_button = Button(0, 0, button)
-tile_button = Button(50, 50, button)
+# Create buttons
+start_button = Button(180, 255, button_image, 2)
+exit_button = Button(180, 355, button_image, 2)
+secret_button = Button(0, 0, secret_button_image)
 
+# Game state variable
+current_screen = "main"  # Can be "main" or "game"
 
-#game loop
-run = True
-while run: 
+# Initialize timer variables
+program_start_ticks = 0
+timer_started = False  # To track if the timer has been started
+
+def main_screen():
+    global current_screen, program_start_ticks, timer_started
+
+    window.fill("grey")
+    title_text_line1 = my_font.render("(totally normal)", True, "black")
+    title_text_line2 = my_font.render("Minesweeper!", True, "black")
+    window.blit(title_text_line1, (140, 100))
+    window.blit(title_text_line2, (150, 140))
+
+    pygame.draw.rect(window, "black", (175, 250, 150, 75))
+    pygame.draw.rect(window, "black", (175, 350, 150, 75))
+    
+    # Draw buttons
+    if start_button.draw():
+        current_screen = "game"  # Switch to game screen
+        program_start_ticks = pygame.time.get_ticks()  # Reset timer
+        timer_started = True  # Mark the timer as started
+    if exit_button.draw():
+        return False  # Signal to quit the game
+    if secret_button.draw():
+        print("secret button pushed >:D")
+    
+    title_text_line3 = my_font.render("play :D", True, "black")
+    title_text_line4 = my_font.render("exit :C", True, "black")
+    window.blit(title_text_line3, (200, 260))
+    window.blit(title_text_line4, (200, 360))
+    
+    return True
+
+def game_screen():
+    global timer_started
+    if not timer_started:
+        return  # Skip drawing the game screen if the timer hasn't started
+
     elapsed_time = (pygame.time.get_ticks() - program_start_ticks) // 1000
 
     window.fill("dark grey")
-    #window.fill((128,128,128))
     pygame.draw.rect(window, "light grey", (20, 20, 460, 80))
-    pygame.draw.rect(window, "light grey", (20, 120, 460, 460))
-    
+    pygame.draw.rect(window, "black", (18, 118, 464, 464))
+
     number_of_flags_left = my_font.render(str(number_of_flags), True, "black")
     game_timer = my_font.render(str(elapsed_time), True, "black")
-    
-    window.blit(number_of_flags_left, (10, 10))
-    window.blit(game_timer, (410, 10))
-    
+    window.blit(number_of_flags_left, (100, 35))
+    window.blit(game_timer, (375, 35))
 
-    start_button_action = start_button.draw()
-    if start_button_action == "left_clicked" and number_of_flags > 0:
-        print("left  button left clicked")
-        number_of_flags -= 1
-    if start_button_action == "right_clicked" and number_of_flags < 75:
-        print("right button right clicked")
-        number_of_flags += 1
-
-    exit_button_action = exit_button.draw()
-    if exit_button_action == "left_clicked":
-        run = False
-        print("Exit button clicked")
-
-    secret_button_action = secret_button.draw()
-    if secret_button_action == "left_clicked":
-        rigged_chance = 100
-        print("secret button clicked")
-
-
-
-    for i in range(number_of_rows):
-        for j in range((number_of_columns)):
-            pygame.draw.rect(window, "light grey", (100 + (15 * i), 100 + (15 * j), 10, 10))
-
-
-    """
-    pygame.draw.rect(window, "light grey", (100, 100, 40, 40))
-    pygame.draw.rect(window, "dark grey", (200, 200, 25, 25))
-    
-    
-    
-    #window.blit(img, (10, 10))
-    #window.blit(img, (20, 20))
-    """
-    
-
-    #event handler
+# Main game loop
+run = True
+while run: 
     for event in pygame.event.get(): 
-        #quit game
         if event.type == pygame.QUIT: 
             run = False
-    
-    #update any changes onto the window screen
+
+    if current_screen == "main":
+        run = main_screen()  # If False is returned, quit
+    elif current_screen == "game":
+        game_screen()
+
     pygame.display.update()
 
-pygame.quit() 
-            
+pygame.quit()
