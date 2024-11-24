@@ -1,13 +1,12 @@
 #Timothy Pearman - 28856139
 #entry for 2024 camjam competition
 #PEP8 Compliant :D
- import pygame
+import pygame
 import random
 
 # Initialize pygame
 pygame.init()
 
-rigged_chance = 0.1
 # Window setup
 window_width, window_height = 500, 600
 window = pygame.display.set_mode((window_width, window_height))
@@ -17,6 +16,40 @@ pygame.display.set_icon(icon)
 
 # Font
 my_font = pygame.font.SysFont('Comic Sans MS', 30)
+
+rigged_chance = 0.1
+check_rigged = False
+def check_rigged_game(rigged_chance):
+    global check_rigged
+    check_rigged = True
+
+    if random.random() < rigged_chance:
+        print("Game is rigged >:D")
+        return True
+    else:
+        print("Game is not rigged :D")
+        return False
+    
+def get_how_rigged(number_of_rows, number_of_columns):
+    global number_of_mines
+    match random.randint(0, 0):
+        case 0:
+            number_of_mines = number_of_rows * number_of_columns
+            return "All BOMBS!"
+        #case 1:
+        #    return "cant place flags"
+        #case 2:
+        #    return "placing flag blows up bomb"
+        #case 3:
+        #    return "first tile is 8/9"
+        #case 4:
+        #    return "not enough flags (cant win)"
+        #case 5:
+        #    return "random tile becomes invisible bomb"
+        case _:
+            return 
+            print("error")
+
 
 # Tile class
 class Tile:
@@ -29,12 +62,24 @@ class Tile:
 
 # Game settings
 number_of_rows, number_of_columns = 15, 15
-number_of_mines, number_of_flags = 50, 50
+number_of_mines = 50
+number_of_flags = number_of_mines
+field_created = False
 mine_field = [[Tile(0) for _ in range(number_of_columns)] for _ in range(number_of_rows)]
-for _ in range(number_of_mines):
-    Row = random.randrange(0, number_of_rows)
-    Column = random.randrange(0, number_of_columns)
-    mine_field[Row][Column].state = 1
+
+def create_mine_field(number_of_rows, number_of_columns, number_of_mines):
+    global mine_field, field_created
+    mines_placed = 0 
+    while(mines_placed < number_of_mines):
+        Row = random.randrange(0, number_of_rows)
+        Column = random.randrange(0, number_of_columns)
+        if mine_field[Row][Column].state != 1:
+            mines_placed += 1
+            mine_field[Row][Column].state = 1
+
+    field_created = True
+    
+    print(f"number of mines placed{mines_placed}")
 
 # Load button images
 tile_image = pygame.image.load("assets/tile.png").convert_alpha()
@@ -100,15 +145,20 @@ exit_button = Button(180, 355, button_image, 2)
 secret_button = Button(0, 0, secret_button_image)#
 
 # Create grid of tile buttons
-tile_buttons = []
-for row in range(number_of_rows):
-    button_row = []
-    for col in range(number_of_columns):
-        x = col * 31 + 18
-        y = row * 31 + 118
-        button = Button(x, y, tile_image)
-        button_row.append(button)
-    tile_buttons.append(button_row)
+grid_created = False
+def create_tile_grid(number_of_rows, number_of_columns, tile_image):
+    global tile_buttons, grid_created
+    tile_buttons = []
+    for row in range(number_of_rows):
+        button_row = []
+        for col in range(number_of_columns):
+            x = col * 31 + 18
+            y = row * 31 + 118
+            button = Button(x, y, tile_image)
+            button_row.append(button)
+        tile_buttons.append(button_row)
+
+    grid_created = True
 
 def update_tile(row, col, action, mine_field=mine_field):
     global number_of_flags
@@ -178,18 +228,13 @@ def check_surrounding_tiles(row, col):
     if total == 0:
         reveal_surrounding_tiles(row, col)  # Reveal surrounding tiles recursively
 
-# Modify reveal_surrounding_tiles to correctly reveal adjacent tiles
 def reveal_surrounding_tiles(row, col):
     for i in range(-1, 2):
         for j in range(-1, 2):
-            # Skip the target element itself
             if i == 0 and j == 0:
                 continue
-
-            # Check bounds
             new_row, new_col = row + i, col + j
             if 0 <= new_row < len(mine_field) and 0 <= new_col < len(mine_field[0]):
-                # Only check and reveal if not already revealed
                 if not mine_field[new_row][new_col].revealed:
                     check_surrounding_tiles(new_row, new_col)
 
@@ -274,6 +319,22 @@ def game_screen():
     game_timer = my_font.render(str(elapsed_time), True, "black")
     window.blit(number_of_flags_left, (100, 35))
     window.blit(game_timer, (375, 35))
+
+    #check if the game should be rigged or not
+    while(check_rigged == False):
+        if check_rigged_game(rigged_chance) == True:
+            print(get_how_rigged(number_of_rows, number_of_columns))
+
+    #create the mine field
+    while(field_created == False):
+        print(number_of_mines)
+        create_mine_field(number_of_rows, number_of_columns, number_of_mines)
+
+    #create the grid
+    while(grid_created == False):
+        create_tile_grid(number_of_rows, number_of_columns, tile_image)
+
+  
 
     # Draw the tile buttons
     for row in range(number_of_rows):
